@@ -6,6 +6,14 @@ export default withApiAuthRequired(async function handler(req, res) {
   const { topic, keywords } = req.body;
   const { user } = await getSession(req, res);
 
+  if (!topic || !keywords) {
+    return res.status(422);
+  }
+
+  if (topic.length > 80|| keywords.length > 80) {
+    return res.status(422);
+  }
+
   const client = await clientPromise;
   const db = client.db('BlogStandard');
 

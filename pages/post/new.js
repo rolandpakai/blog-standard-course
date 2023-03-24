@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import { AppLayout } from "../../components/AppLAyout";
@@ -10,6 +10,11 @@ export default function NewPost() {
   const [topic, setTopic] = useState("");
   const [keywords, setKeywords] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [disableGenerate, setDisableGenerate] = useState(false);
+
+  useEffect(() => {
+    setDisableGenerate(!(!!topic && !!keywords));
+  }, [topic, keywords]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,6 +61,7 @@ export default function NewPost() {
           </label>
           <textarea 
             className="txtarea"
+            maxLength={80}
             value={topic} 
             onChange={e => setTopic(e.target.value)}
           />
@@ -68,6 +74,7 @@ export default function NewPost() {
           </label>
           <textarea 
             className="txtarea"
+            maxLength={80}
             value={keywords} 
             onChange={e => setKeywords(e.target.value)}
           />
@@ -75,7 +82,11 @@ export default function NewPost() {
             Separate the keywords with a comma
           </small>
         </div>
-        <button type="submit" className="btn" >
+        <button 
+          type="submit" 
+          className="btn" 
+          disabled={disableGenerate}
+        >
           Generate
         </button>
       </form>
@@ -92,6 +103,15 @@ NewPost.getLayout = function getLayout(page, pageProps) {
 export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(ctx) {
     const props = await getAppProps(ctx);
+
+    if (!props.availableTokens) {
+      return {
+        redirect: {
+          destination: '/token-topup',
+          permanent: false,
+        }
+      }
+    }
 
     return {
       props
