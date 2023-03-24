@@ -1,12 +1,13 @@
-import Link from "next/link";
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCoins } from "@fortawesome/free-solid-svg-icons";
 import Image from 'next/image';
 import { Logo } from '../Logo';
+import Link from "next/link";
 
-export const AppLayout = ({ children }) => {
+export const AppLayout = ({ children, ...rest }) => {
   const { user } = useUser();
+  const { availableTokens, posts, postId } = rest;
 
   return (
     <div className="grid grid-cols-[300px_1fr] h-screen max-h-screen">
@@ -27,11 +28,19 @@ export const AppLayout = ({ children }) => {
               icon={faCoins}
               className="text-yellow-500"
             />
-            <span className="pl-1">0 tokens available</span>
+            <span className="pl-1">{availableTokens} tokens available</span>
           </Link>
         </div>
-        <div className="flex-1 overflow-hidden bg-gradient-to-b from-slate-800 to-cyan-800">
-          List of Posts
+        <div className="px-4 flex-1 overflow-hidden bg-gradient-to-b from-slate-800 to-cyan-800">
+          {posts.map(post => (
+             <Link 
+              key={post._id} 
+              href={`/post/${post._id}`}
+              className={`py-1 border block text-ellipsis overflow-hidden whitespace-nowrap my-1 px-2 bg-white/10 cursor-pointer rounded-sm ${postId === post._id ? "bg-white/20 border-white" : "border-white/0 "}`}
+             >
+              {post.topic}
+             </Link>
+          ))}
         </div>
         <div className="bg-cyan-800 flex items-center gap-2 border-t border-t-black/50 h-20 px-2">
         {
@@ -57,7 +66,7 @@ export const AppLayout = ({ children }) => {
       }
         </div>
       </div>
-      <div>{children}</div>
+      {children}
     </div>
   );
 };

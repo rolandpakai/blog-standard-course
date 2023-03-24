@@ -1,7 +1,21 @@
+import { withApiAuthRequired, getSession } from '@auth0/nextjs-auth0';
 import { Configuration, OpenAIApi } from 'openai';
+import clientPromise from '../../lib/mongodb';
 
-export default async function handler(req, res) {
+export default withApiAuthRequired(async function handler(req, res) {
   const { topic, keywords } = req.body;
+  const { user } = await getSession(req, res);
+
+  const client = await clientPromise;
+  const db = client.db('BlogStandard');
+
+  const userProfile = await db.collection('users').findOne({
+    auth0Id: user.sub
+  });
+
+  if (!userProfile?.availableTokens) {
+    return res.status(403);
+  }
 
   const config = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
@@ -33,7 +47,25 @@ export default async function handler(req, res) {
     ],
   });
 
-  res.status(200).json({ 
-    post: JSON.parse(response.data.choices[0]?.message.content.split('\n').join('')) 
+  await db.collection("users").updateOne({
+    auth0Id: user.sub
+  }, {
+    $inc: {
+      availableTokens: -1
+    }
   });
-}
+
+  const parsed = JSON.parse(response.data.choices[0]?.message.content.split('\n').join(''));
+
+  const post = db.collection('posts').insertOne({
+    ...parsed,
+    topic, 
+    keywords,
+    userId: userProfile._id,
+    created: new Date(),
+  });
+
+  res.status(200).json({ 
+    postId: post.insertedId,
+  });
+});
