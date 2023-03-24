@@ -46,6 +46,10 @@
   li {
     @apply my-2;
   }
+
+  a:hover {
+    @apply underline; 
+  }
 }
 
 @layer components {
