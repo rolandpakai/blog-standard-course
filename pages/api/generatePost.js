@@ -65,7 +65,7 @@ export default withApiAuthRequired(async function handler(req, res) {
 
   const parsed = JSON.parse(response.data.choices[0]?.message.content.split('\n').join(''));
 
-  const post = db.collection('posts').insertOne({
+  const post = await db.collection('posts').insertOne({
     ...parsed,
     topic, 
     keywords,

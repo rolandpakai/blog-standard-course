@@ -18,11 +18,15 @@ export const getAppProps = async (ctx) => {
     }
   }
 
-  const posts = await db.collection('posts').find({
-    userId: user._id
-  }).sort({
-    created: -1,
-  }).toArray();
+  const posts = await db.collection('posts')
+    .find({
+      userId: user._id
+    })
+    .sort({
+      created: -1,
+    })
+    .limit(5)
+    .toArray();
 
   return {
     availableTokens: user.availableTokens,
@@ -37,5 +41,4 @@ export const getAppProps = async (ctx) => {
     }),
     postId: ctx.params?.postId || null
   }
-
 };
